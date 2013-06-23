@@ -1,0 +1,93 @@
+var http = require('http');
+var url = require('url');
+var mutil = require('./mathUtil');
+var querystring = require('querystring');
+var user = 'undefined';
+var postsign = function(req,res){
+	res.writeHead(200,{
+	  'Content-Type':'text/html'
+	});
+	var info = '';
+	req.on('data', function(chunk){
+		info+=chunk;
+	});
+	
+	req.on('end', function(){
+		info = querystring.parse(info);
+		console.log('info'+info);
+		user = info.a!='undefined'
+	 	  ? info.a:'undefined';
+		res.end( mutil.page("sign","",[
+		"<p>Enter your name</p>",
+		"<form name='sign' action='/postsign' method='post'>",
+		"name: <input type='text' name='a'/><br/>",
+		"<input type='submit' value='submit'/>",
+		"</form>"
+		].join('\n'))
+		);
+	});
+	
+};
+
+var getsign = function(req,res){
+	res.writeHead(200,{
+	  'Content-Type':'text/html'
+	});
+	var urlinfo = url.parse(req.url, true);
+console.log(urlinfo.query.a);
+console.log(isNaN(urlinfo.query.a));
+	user = urlinfo.query.a!='undefined'
+	   ? urlinfo.query.a:'undefined';
+console.log(user);
+	res.end(
+	 mutil.page("sign","",[
+	 
+	"<p>Enter your name</p>",
+	"<form name='getsign' action='/getsign' method='get'>",
+	"name: <input type='text' name='a'/><br/>",
+	"<input type='submit' value='submit'/>",
+	"</form>"
+	].join('\n'))
+	);
+};
+
+var logout = function(req,res){
+	user = 'undefined';
+};
+
+var welcomepage =function(req,res){
+	res.writeHead(200,{
+	  'Content-Type':'text/html'
+	});
+	user = user!='undefined'
+	 	  ? user:'undefined';
+	console.log(user);
+		res.end(
+		mutil.page("Welcome Page","",[
+		( user!='undefined'?
+			("<p class='result'>welcome {aa} </p>"
+		.replace("{aa}",user)):"<p class='result'>fail, you have no right </p>"
+		)	
+		].join('\n'))
+		);
+	
+	
+}; 
+
+var server = http.createServer(function(req,res){
+var requrl = url.parse(req.url, true);
+if(requrl.pathname === '/'){
+	welcomepage(req,res);
+}else if(requrl.pathname === '/getsign'){
+	getsign(req,res);
+}
+else if(requrl.pathname === '/postsign'){
+	postsign(req,res);
+}
+
+
+});
+
+server.listen(8124);
+
+console.log('Server running at http://127.0.0.1:8124/');
